@@ -1,25 +1,41 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from 'react';
+import CoinList from './Components/Coins';
+import SearchBar from './Components/SearchBar';
+import Layout from './Components/Layout';
 
-function App() {
+export default function Home({ filteredCoins }) {
+  const [search, setSearch] = useState('');
+
+  const allCoins = filteredCoins.filter(coin =>
+    coin.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleChange = e => {
+    e.preventDefault();
+
+    setSearch(e.target.value.toLowerCase());
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Layout>
+      <div className='coin_app'>
+        <SearchBar type='text' placeholder='Search' onChange={handleChange} />
+        <CoinList filteredCoins={allCoins} />
+      </div>
+    </Layout>
   );
 }
 
-export default App;
+export const getServerSideProps = async () => {
+  const res = await fetch(
+    'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false'
+  );
+
+  const filteredCoins = await res.json();
+
+  return {
+    props: {
+      filteredCoins
+    }
+  };
+};
